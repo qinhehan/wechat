@@ -91,8 +91,7 @@ class XML
     /**
      * Object to array.
      *
-     *
-     * @param SimpleXMLElement $obj
+     * @param string $data
      *
      * @return array
      */

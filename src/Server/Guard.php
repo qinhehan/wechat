@@ -210,30 +210,6 @@ class Guard
     }
 
     /**
-     * Request getter.
-     *
-     * @return Request
-     */
-    public function getRequest()
-    {
-        return $this->request;
-    }
-
-    /**
-     * Request setter.
-     *
-     * @param Request $request
-     *
-     * @return $this
-     */
-    public function setRequest(Request $request)
-    {
-        $this->request = $request;
-
-        return $this;
-    }
-
-    /**
      * Set Encryptor.
      *
      * @param Encryptor $encryptor
@@ -278,7 +254,7 @@ class Guard
             return $message->get('content', self::SUCCESS_EMPTY_RESPONSE);
         }
 
-        if (is_string($message) || is_numeric($message)) {
+        if (is_string($message)) {
             $message = new Text(['content' => $message]);
         }
 

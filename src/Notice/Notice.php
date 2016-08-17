@@ -80,7 +80,7 @@ class Notice extends AbstractAPI
      * @param int $industryOne
      * @param int $industryTwo
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return bool
      */
     public function setIndustry($industryOne, $industryTwo)
     {
@@ -95,7 +95,7 @@ class Notice extends AbstractAPI
     /**
      * Get industry.
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return array
      */
     public function getIndustry()
     {
@@ -107,7 +107,7 @@ class Notice extends AbstractAPI
      *
      * @param string $shortId
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return string
      */
     public function addTemplate($shortId)
     {
@@ -119,7 +119,7 @@ class Notice extends AbstractAPI
     /**
      * Get private templates.
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return array
      */
     public function getPrivateTemplates()
     {
@@ -131,7 +131,7 @@ class Notice extends AbstractAPI
      *
      * @param string $templateId
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return array
      */
     public function deletePrivateTemplate($templateId)
     {
@@ -145,7 +145,7 @@ class Notice extends AbstractAPI
      *
      * @param $data
      *
-     * @return \EasyWeChat\Support\Collection
+     * @return mixed
      *
      * @throws \EasyWeChat\Core\Exceptions\InvalidArgumentException
      */

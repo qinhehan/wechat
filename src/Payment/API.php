@@ -420,7 +420,7 @@ class API extends AbstractAPI
     /**
      * Parse Response XML to array.
      *
-     * @param ResponseInterface $response
+     * @param string|\Psr\Http\Message\ResponseInterface $response
      *
      * @return \EasyWeChat\Support\Collection
      */

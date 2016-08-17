@@ -45,9 +45,9 @@ class User extends AbstractAPI
     public function get($openId, $lang = 'zh_CN')
     {
         $params = [
-                   'openid' => $openId,
-                   'lang' => $lang,
-                  ];
+            'openid' => $openId,
+            'lang' => $lang,
+        ];
 
         return $this->parseJSON('get', [self::API_GET, $params]);
     }
@@ -55,7 +55,7 @@ class User extends AbstractAPI
     /**
      * Batch get users.
      *
-     * @param array  $openIds
+     * @param array $openIds
      * @param string $lang
      *
      * @return \EasyWeChat\Support\Collection
@@ -66,9 +66,9 @@ class User extends AbstractAPI
 
         $params['user_list'] = array_map(function ($openId) use ($lang) {
             return [
-                    'openid' => $openId,
-                    'lang' => $lang,
-                    ];
+                'openid' => $openId,
+                'lang' => $lang,
+            ];
         }, $openIds);
 
         return $this->parseJSON('json', [self::API_BATCH_GET, $params]);
@@ -81,9 +81,9 @@ class User extends AbstractAPI
      *
      * @return \EasyWeChat\Support\Collection
      */
-    public function lists($nextOpenId = null)
+    public function lists($nextOpenId = null, $count = null)
     {
-        $params = ['next_openid' => $nextOpenId];
+        $params = ['next_openid' => $nextOpenId, 'count' => is_null($count) ? 1000 : $count];
 
         return $this->parseJSON('get', [self::API_LIST, $params]);
     }
@@ -99,9 +99,9 @@ class User extends AbstractAPI
     public function remark($openId, $remark)
     {
         $params = [
-                   'openid' => $openId,
-                   'remark' => $remark,
-                  ];
+            'openid' => $openId,
+            'remark' => $remark,
+        ];
 
         return $this->parseJSON('json', [self::API_REMARK, $params]);
     }

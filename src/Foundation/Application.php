@@ -25,7 +25,6 @@
  */
 namespace EasyWeChat\Foundation;
 
-use Doctrine\Common\Cache\Cache as CacheInterface;
 use Doctrine\Common\Cache\FilesystemCache;
 use EasyWeChat\Core\AccessToken;
 use EasyWeChat\Core\Http;
@@ -39,28 +38,28 @@ use Symfony\Component\HttpFoundation\Request;
 /**
  * Class Application.
  *
- * @property \EasyWeChat\Server\Guard                    $server
- * @property \EasyWeChat\User\User                       $user
- * @property \EasyWeChat\User\Tag                        $user_tag
- * @property \EasyWeChat\User\Group                      $user_group
- * @property \EasyWeChat\Js\Js                           $js
- * @property \Overtrue\Socialite\SocialiteManager        $oauth
- * @property \EasyWeChat\Menu\Menu                       $menu
- * @property \EasyWeChat\Notice\Notice                   $notice
- * @property \EasyWeChat\Material\Material               $material
- * @property \EasyWeChat\Material\Temporary              $material_temporary
- * @property \EasyWeChat\Staff\Staff                     $staff
- * @property \EasyWeChat\Url\Url                         $url
- * @property \EasyWeChat\QRCode\QRCode                   $qrcode
- * @property \EasyWeChat\Semantic\Semantic               $semantic
- * @property \EasyWeChat\Stats\Stats                     $stats
- * @property \EasyWeChat\Payment\Merchant                $merchant
- * @property \EasyWeChat\Payment\Payment                 $payment
- * @property \EasyWeChat\Payment\LuckyMoney\LuckyMoney   $lucky_money
+ * @property \EasyWeChat\Server\Guard $server
+ * @property \EasyWeChat\User\User $user
+ * @property \EasyWeChat\Card\Card $card
+ * @property \EasyWeChat\User\Tag $user_tag
+ * @property \EasyWeChat\User\Group $user_group
+ * @property \EasyWeChat\Js\Js $js
+ * @property \Overtrue\Socialite\SocialiteManager $oauth
+ * @property \EasyWeChat\Menu\Menu $menu
+ * @property \EasyWeChat\Notice\Notice $notice
+ * @property \EasyWeChat\Material\Material $material
+ * @property \EasyWeChat\Material\Temporary $material_temporary
+ * @property \EasyWeChat\Staff\Staff $staff
+ * @property \EasyWeChat\Url\Url $url
+ * @property \EasyWeChat\QRCode\QRCode $qrcode
+ * @property \EasyWeChat\Semantic\Semantic $semantic
+ * @property \EasyWeChat\Stats\Stats $stats
+ * @property \EasyWeChat\Payment\Merchant $merchant
+ * @property \EasyWeChat\Payment\Payment $payment
+ * @property \EasyWeChat\Payment\LuckyMoney\LuckyMoney $lucky_money
  * @property \EasyWeChat\Payment\MerchantPay\MerchantPay $merchant_pay
- * @property \EasyWeChat\Reply\Reply                     $reply
- * @property \EasyWeChat\Broadcast\Broadcast             $broadcast
- * @property \EasyWeChat\Card\Card                       $card
+ * @property \EasyWeChat\Reply\Reply $reply
+ * @property \EasyWeChat\Broadcast\Broadcast $broadcast
  */
 class Application extends Container
 {
@@ -72,6 +71,7 @@ class Application extends Container
     protected $providers = [
         ServiceProviders\ServerServiceProvider::class,
         ServiceProviders\UserServiceProvider::class,
+        ServiceProviders\CardServiceProvider::class,
         ServiceProviders\JsServiceProvider::class,
         ServiceProviders\OAuthServiceProvider::class,
         ServiceProviders\MenuServiceProvider::class,
@@ -86,7 +86,6 @@ class Application extends Container
         ServiceProviders\POIServiceProvider::class,
         ServiceProviders\ReplyServiceProvider::class,
         ServiceProviders\BroadcastServiceProvider::class,
-        ServiceProviders\CardServiceProvider::class,
     ];
 
     /**
@@ -113,7 +112,7 @@ class Application extends Container
         Http::setDefaultOptions($this['config']->get('guzzle', ['timeout' => 5.0]));
 
         foreach (['app_id', 'secret'] as $key) {
-            !isset($config[$key]) || $config[$key] = '***'.substr($config[$key], -5);
+            !isset($config[$key]) || $config[$key] = '***' . substr($config[$key], -5);
         }
 
         Log::debug('Current config:', $config);
@@ -173,7 +172,7 @@ class Application extends Container
      * Magic set access.
      *
      * @param string $id
-     * @param mixed  $value
+     * @param mixed $value
      */
     public function __set($id, $value)
     {
@@ -199,19 +198,17 @@ class Application extends Container
             return Request::createFromGlobals();
         };
 
-        if (!empty($this['config']['cache']) && $this['config']['cache'] instanceof CacheInterface) {
-            $this['cache'] = $this['config']['cache'];
-        } else {
-            $this['cache'] = function () {
-                return new FilesystemCache(sys_get_temp_dir());
-            };
-        }
+        $this['cache'] = function () {
+            return new FilesystemCache(sys_get_temp_dir());
+        };
 
         $this['access_token'] = function () {
             return new AccessToken(
                 $this['config']['app_id'],
                 $this['config']['secret'],
-                $this['cache']
+                $this['cache'],
+                $this['config']['auth_info'],
+                $this['config']['component_token']
             );
         };
     }
@@ -232,7 +229,17 @@ class Application extends Container
         } elseif ($logFile = $this['config']['log.file']) {
             $logger->pushHandler(new StreamHandler($logFile, $this['config']->get('log.level', Logger::WARNING)));
         }
+        Log::setLogger($logger);
+    }
 
+    public function resetLogger($auth_id)
+    {
+        $logger = new Logger('easywechat');
+        $logFile = $this['config']['log.file'];
+        $logFileInfo = explode('.', $logFile);
+        $newFile = str_replace('easywechat', '', $logFileInfo[0]) . $auth_id;
+        $newFile .= '.' . $logFileInfo[1];
+        $logger->pushHandler(new StreamHandler($newFile, $this['config']->get('log.level', Logger::WARNING)));
         Log::setLogger($logger);
     }
 }

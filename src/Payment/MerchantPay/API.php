@@ -75,7 +75,8 @@ class API extends AbstractAPI
     /**
      * Send MerchantPay.
      *
-     * @param array $params
+     * @param array  $params
+     * @param string $type
      *
      * @return \EasyWeChat\Support\Collection
      */
@@ -136,7 +137,7 @@ class API extends AbstractAPI
     /**
      * Parse Response XML to array.
      *
-     * @param ResponseInterface $response
+     * @param \Psr\Http\Message\ResponseInterface|string $response
      *
      * @return \EasyWeChat\Support\Collection
      */

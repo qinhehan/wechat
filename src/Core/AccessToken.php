@@ -36,6 +36,13 @@ class AccessToken
      */
     protected $appId;
 
+    protected $auth_appid;
+    protected $access_token;
+    protected $component_token;
+    protected $access_refresh_token;
+
+    protected $expires_in;
+
     /**
      * App secret.
      *
@@ -49,13 +56,6 @@ class AccessToken
      * @var Cache
      */
     protected $cache;
-
-    /**
-     * Cache Key.
-     *
-     * @var cacheKey
-     */
-    protected $cacheKey;
 
     /**
      * Http instance.
@@ -80,19 +80,25 @@ class AccessToken
 
     // API
     const API_TOKEN_GET = 'https://api.weixin.qq.com/cgi-bin/token';
+    const API_COMMPENT_TOKEN_GET = 'https://api.weixin.qq.com/cgi-bin/component/api_authorizer_token';
 
     /**
      * Constructor.
      *
-     * @param string                       $appId
-     * @param string                       $secret
+     * @param string $appId
+     * @param string $secret
      * @param \Doctrine\Common\Cache\Cache $cache
      */
-    public function __construct($appId, $secret, Cache $cache = null)
+    public function __construct($appId, $secret, Cache $cache = null, $auth_info = null, $component_token = null)
     {
         $this->appId = $appId;
         $this->secret = $secret;
         $this->cache = $cache;
+        $this->auth_appid = $auth_info->authorizer_appid;
+        $this->access_token = $auth_info->authorizer_access_token;
+        $this->access_refresh_token = $auth_info->authorizer_refresh_token;
+        $this->expires_in = $auth_info->expires_in;
+        $this->component_token = $component_token;
     }
 
     /**
@@ -104,19 +110,29 @@ class AccessToken
      */
     public function getToken($forceRefresh = false)
     {
-        $cacheKey = $this->getCacheKey();
-        $cached = $this->getCache()->fetch($cacheKey);
-
-        if ($forceRefresh || empty($cached)) {
+        if ($this->checkExpires()) {
+            return $this->access_token;
+        } else {
             $token = $this->getTokenFromServer();
-
-            // XXX: T_T... 7200 - 1500
-            $this->getCache()->save($cacheKey, $token['access_token'], $token['expires_in'] - 1500);
-
-            return $token['access_token'];
+            return $token['authorizer_access_token'];
         }
 
-        return $cached;
+
+//        $cacheKey = $this->prefix . $this->appId;
+//
+//        $cached = $this->getCache()->fetch($cacheKey);
+//
+//        if ($forceRefresh || empty($cached)) {
+//
+//            $token = $this->getTokenFromServer();
+//
+//            // XXX: T_T... 7200 - 1500
+//            $this->getCache()->save($cacheKey, $token['access_token'], $token['expires_in'] - 1500);
+//
+//            return $token['access_token'];
+//        }
+//
+//        return $cached;
     }
 
     /**
@@ -202,26 +218,28 @@ class AccessToken
      *
      * @throws \EasyWeChat\Core\Exceptions\HttpException
      *
-     * @return string
+     * @return array|bool
      */
     public function getTokenFromServer()
     {
         $params = [
-            'appid' => $this->appId,
-            'secret' => $this->secret,
-            'grant_type' => 'client_credential',
+            'component_appid' => $this->appId,
+            'authorizer_appid' => $this->auth_appid,
+            'authorizer_refresh_token' => $this->access_refresh_token
         ];
 
         $http = $this->getHttp();
 
-        $token = $http->parseJSON($http->get(self::API_TOKEN_GET, $params));
+        //$token = $http->parseJSON($http->get(self::API_TOKEN_GET, $params));
+        $token = $http->parseJSON($http->post(self::API_COMMPENT_TOKEN_GET . '?component_access_token=' . $this->component_token, json_encode($params)));
 
-        if (empty($token['access_token'])) {
-            throw new HttpException('Request AccessToken fail. response: '.json_encode($token, JSON_UNESCAPED_UNICODE));
+        if (empty($token['authorizer_access_token'])) {
+            throw new HttpException('Request AccessToken fail. response: ' . json_encode($token, JSON_UNESCAPED_UNICODE));
         }
 
         return $token;
     }
+
 
     /**
      * Return the http instance.
@@ -248,44 +266,13 @@ class AccessToken
     }
 
     /**
-     * Set the access token prefix.
-     *
-     * @param string $prefix
-     *
-     * @return $this
+     * 判断token是否过期
+     * @return bool
      */
-    public function setPrefix($prefix)
+    public function checkExpires()
     {
-        $this->prefix = $prefix;
-
-        return $this;
-    }
-
-    /**
-     * Set access token cache key.
-     *
-     * @param string $cacheKey
-     *
-     * @return $this
-     */
-    public function setCacheKey($cacheKey)
-    {
-        $this->cacheKey = $cacheKey;
-
-        return $this;
-    }
-
-    /**
-     * Get access token cache key.
-     *
-     * @return string $this->cacheKey
-     */
-    public function getCacheKey()
-    {
-        if (is_null($this->cacheKey)) {
-            return $this->prefix.$this->appId;
-        }
-
-        return $this->cacheKey;
+        $expires_in = strtotime($this->expires_in);
+        $now = time();
+        return $now < $expires_in;
     }
 }

@@ -69,9 +69,9 @@ class Staff extends AbstractAPI
     public function create($account, $nickname)
     {
         $params = [
-                   'kf_account' => $account,
-                   'nickname' => $nickname,
-                  ];
+            'kf_account' => $account,
+            'nickname' => $nickname,
+        ];
 
         return $this->parseJSON('json', [self::API_CREATE, $params]);
     }
@@ -87,9 +87,9 @@ class Staff extends AbstractAPI
     public function update($account, $nickname)
     {
         $params = [
-                   'kf_account' => $account,
-                   'nickname' => $nickname,
-                  ];
+            'kf_account' => $account,
+            'nickname' => $nickname,
+        ];
 
         return $this->parseJSON('json', [self::API_UPDATE, $params]);
     }
@@ -109,7 +109,7 @@ class Staff extends AbstractAPI
         // #222
         // PS: 如果你是微信做接口的，奉劝你们，尊重技术，不会别乱搞，笨不是你们的错，你们出来坑人就是大错特错。
         $accessTokenField = sprintf('%s=%s', $this->accessToken->getQueryName(), $this->accessToken->getToken());
-        $url = sprintf(self::API_DELETE.'?%s&kf_account=%s', $accessTokenField, $account);
+        $url = sprintf(self::API_DELETE . '?%s&kf_account=%s', $accessTokenField, $account);
 
         $contents = $this->getHttp()->parseJSON(file_get_contents($url));
 
@@ -129,9 +129,9 @@ class Staff extends AbstractAPI
     public function invite($account, $wechatId)
     {
         $params = [
-                   'kf_account' => $account,
-                   'invite_wx' => $wechatId,
-                  ];
+            'kf_account' => $account,
+            'invite_wx' => $wechatId,
+        ];
 
         return $this->parseJSON('json', [self::API_INVITE_BIND, $params]);
     }
@@ -190,11 +190,11 @@ class Staff extends AbstractAPI
     public function records($startTime, $endTime, $page = 1, $pageSize = 10)
     {
         $params = [
-                   'starttime' => is_numeric($startTime) ? $startTime : strtotime($startTime),
-                   'endtime' => is_numeric($endTime) ? $endTime : strtotime($endTime),
-                   'pageindex' => $page,
-                   'pagesize' => $pageSize,
-                  ];
+            'starttime' => is_numeric($startTime) ? $startTime : strtotime($startTime),
+            'endtime' => is_numeric($endTime) ? $endTime : strtotime($endTime),
+            'pageindex' => $page,
+            'pagesize' => $pageSize,
+        ];
 
         return $this->parseJSON('json', [self::API_RECORDS, $params]);
     }
